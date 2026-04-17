@@ -8,7 +8,6 @@
 #include "statetable.h"
 #include "divert.h"
 
-//cl /std:c11 /W4 /O2 /permissive- /I D:\divertengine\WinDivert\include main.c hook.c keybinds.c config_loader.c parser.c dispatcher.c statetable.c divert.c user32.lib /LIBPATH:D:\divertengine\WinDivert\x64 WinDivert.lib
 //cl /std:c11 /W4 /O2 /permissive- /I include /I D:\divertengine\WinDivert\include /Fo:build\obj\ /Fe:build\app.exe src\main.c src\hook.c src\keybinds.c src\config_loader.c src\parser.c src\dispatcher.c src\statetable.c src\divert.c user32.lib /link /LIBPATH:D:\divertengine\WinDivert\x64 WinDivert.lib ws2_32.lib
 
 static BOOL WINAPI console_handler(DWORD signal) {

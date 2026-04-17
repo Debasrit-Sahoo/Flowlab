@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// these MUST be visible (not static)
 extern KeybindDef g_defs[MAX_RULES];
 extern uint8_t g_def_count;
 
@@ -29,8 +28,6 @@ int config_load(const char *path, uint8_t* port_used){
             else if (strcmp(val, "local") == 0) port_policy_flag = 0;
             else { fclose(fp); return 0; }
         } else {
-            // not a policy line, put it back for the rule loop
-            // (or just re-seek to start since we only consumed one line)
             rewind(fp);
         }
     }

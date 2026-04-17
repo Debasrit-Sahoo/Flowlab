@@ -4,21 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "keybinds.h"
-
-/* SCHEMA = <keybind>,<start>,<end>,<protocol>,<direction>,<action>
- keybinds = only one vk supported at the end as in MODS+VK ex: CTRL+K
-RULE BYTE = 01234567
-0: tcp ?
-1: udp ?
-2: UL ?
-3: DL ?
-4-7: action
-
-RANGE 32BIT UINT = 0-15BIT STARTING PORT, 16-31BIT ENDING PORT
- */
-
-
-
 /* ===================== UTIL ===================== */
 
 char* trim(char *s) {
@@ -44,7 +29,7 @@ int parse_u16(const char *s, uint16_t *out) {
     char *end;
     long val = strtol(s, &end, 10);
 
-    if (*end != '\0') return 0;          // reject junk
+    if (*end != '\0') return 0;
     if (val < 0 || val > 65535) return 0;
 
     *out = (uint16_t)val;

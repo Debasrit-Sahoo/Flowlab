@@ -1,15 +1,3 @@
-// BIT REPR => 8bits 76543210
-/*
-is_tcp?
-is_udp?
-is_ul?
-is_dl?
-4567 -> action table mapping for fx
-table[int] -> Pfx(packet)
-if (!4567){reinject(packet)}
-FOR SANITY, LAST PRESSED KEYBIND IS VALID RULE AND 
-UNTOGGLE JUST ZEROES THE ACTION ENTRY TO EFFECTIVELY INVALIDATE THE ENTRY AND EACH KEYPRESS OVERWRITE ENTRY
-*/
 #include "statetable.h"
 #include <stdlib.h>
 #include <stdint.h>
