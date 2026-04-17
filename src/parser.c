@@ -25,6 +25,15 @@ int str_eq_icase(const char *a, const char *b) {
     return *a == *b;
 }
 
+int str_eq_icase_n(const char *a, const char *b, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        if (toupper((unsigned char)a[i]) != toupper((unsigned char)b[i]))
+            return 0;
+        if (a[i] == '\0') return 1;
+    }
+    return 1;
+}
+
 int parse_u16(const char *s, uint16_t *out) {
     char *end;
     long val = strtol(s, &end, 10);
@@ -91,9 +100,16 @@ int parse_direction(char *s, uint8_t *out) {
 
 int parse_action(char *s, uint8_t *out) {
     if (str_eq_icase(s, "BLOCK")) *out = 1;
-    else if (str_eq_icase(s, "LIMIT")) *out = 2;
-    else return 0;
-    return 1;
+    else if (strlen(s) >= 6 && str_eq_icase_n(s, "LIMIT", 5)) {
+        char *num_part = s + 5;
+        char *end;
+        long n = strtol(num_part, &end, 10);
+        if (*end != '\0' || n < 1 || n > MAX_LIMIT_LEVELS) return 0;
+        *out = (uint8_t)(n + 1);  // LIMIT1=2, LIMIT2=3, ... LIMIT14=15
+        return 1;
+    }
+    return 0;
+
 }
 
 uint8_t build_flags(uint8_t proto, uint8_t dir, uint8_t action) {

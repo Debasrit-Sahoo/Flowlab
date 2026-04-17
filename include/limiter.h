@@ -15,6 +15,7 @@ typedef struct {
 
 extern RateLimiter g_limiters[MAX_RULES];
 extern uint8_t g_limiter_count;
+extern uint64_t g_speeds[MAX_LIMIT_LEVELS];
 
 void limiters_init(void);
 int  limiter_consume(RateLimiter *l, uint32_t packet_len);

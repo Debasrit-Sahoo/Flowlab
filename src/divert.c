@@ -41,8 +41,10 @@ typedef struct {
 
 #pragma pack(pop)
 
+static HANDLE g_thread = NULL;
 HANDLE handle;
 void divert_loop(void);
+static volatile int g_running = 0;
 
 static int build_rule_clause(const Rule *r, char *buf, int buf_size) {
     uint16_t start = (uint16_t)(r->port_range >> 16);
@@ -96,7 +98,7 @@ char *build_filter(void) {
         uint16_t end   = (uint16_t)(g_table.rules[i].port_range & 0xFFFF);
         if (start == 0 && end == 65535) {
             char *f = malloc(5);
-            if (f) strcpy(f, "true");
+            if (f) strcpy_s(f, 5, "true");
             return f;
         }
     }
@@ -141,12 +143,13 @@ int divert_init(void){
 
     printf("WinDivert opened with filter\n");
     free(filter);
+    g_running = 1;
     HANDLE thread = CreateThread(NULL, 0, divert_thread, NULL, 0, NULL);
         if (!thread) {
             printf("CreateThread failed: %lu\n", GetLastError());
             return 1;
         }
-        CloseHandle(thread);
+        g_thread = thread;
 
     return 0;
 }
@@ -158,7 +161,7 @@ void divert_loop(void){
     WINDIVERT_ADDRESS addr;
     UINT packet_len;
     limiters_init();
-    while (1) {
+    while (g_running) {
         if (!WinDivertRecv(handle, packet, sizeof(packet), &packet_len, &addr)) {
             continue;
         }
@@ -212,29 +215,20 @@ void divert_loop(void){
         
         if (!action){goto forward;}
 
-        switch (action){
-            case 1:
-                continue;
-
-            case 2: {
-                RateLimiter *l = NULL;
-                for (int i = 0; i < g_limiter_count; i++) {
-                    if (relevant_port >= g_limiters[i].port_start &&
-                        relevant_port <= g_limiters[i].port_end) {
-                        l = &g_limiters[i];
-                        break;
-                    }
-                }
-                if (l && !limiter_consume(l, packet_len)){
-                    continue;
-                }  // drop
-                printf("INJECTED BACK\n");
-                goto forward;
-            }
-            
-            default:
-                break;
+        if (action == 1){
+            continue; // DROP
         }
+        RateLimiter *l = NULL;
+        for (int i = 0; i < g_limiter_count; i++) {
+            if (relevant_port >= g_limiters[i].port_start && relevant_port <= g_limiters[i].port_end) {
+                l = &g_limiters[i];
+                break;
+            }
+        }
+        if (l && !limiter_consume(l, packet_len)){
+            continue;
+        }  // drop
+        goto forward;
 
     forward:
         WinDivertSend(handle, packet, packet_len, NULL, &addr);
@@ -242,8 +236,14 @@ void divert_loop(void){
 }
 
 void divert_close(void) {
+    g_running = 0;
     if (handle) {
         WinDivertClose(handle);
         handle = NULL;
+    }
+    if (g_thread){
+        WaitForSingleObject(g_thread, 3000);
+        CloseHandle(g_thread);
+        g_thread = NULL;
     }
 }

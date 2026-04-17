@@ -61,6 +61,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         Rule *r = keybind_lookup(mods, (uint8_t)vk);
         if (r) {
             dispatch_keybind(r);
+            return 1;
         }
     }
 

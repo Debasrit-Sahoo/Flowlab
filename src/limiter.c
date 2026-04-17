@@ -9,12 +9,20 @@
 RateLimiter g_limiters[MAX_RULES];
 uint8_t g_limiter_count = 0;
 
+uint64_t g_speeds[MAX_LIMIT_LEVELS] = {DEFAULT_RATE_BPS};
+
 void limiters_init(void) {
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
 
     for (int i = 0; i < g_table.rule_count; i++) {
-        if ((g_table.rules[i].rule >> ACTION_SHIFT) != 2) continue;
+        uint8_t action = g_table.rules[i].rule >> ACTION_SHIFT;
+        if (action < 2) continue;
+
+        uint8_t    speed_idx   = action - 2;
+        uint64_t   rate_bps    = g_speeds[speed_idx];
+        uint64_t   rate_per_tick = (rate_bps * SCALE) / (uint64_t)freq.QuadPart;
+
 
         uint16_t s = (uint16_t)(g_table.rules[i].port_range >> 16);
         uint16_t e = (uint16_t)(g_table.rules[i].port_range & 0xFFFF);
@@ -22,17 +30,13 @@ void limiters_init(void) {
         LARGE_INTEGER now;
         QueryPerformanceCounter(&now);
 
-        // prescale: rate_per_tick = (rate_bps * SCALE) / freq
-        // hot path becomes: tokens += (elapsed * rate_per_tick) >> SCALE_SHIFT
-        uint64_t rate_per_tick = (DEFAULT_RATE_BPS * SCALE) / (uint64_t)freq.QuadPart;
-
         g_limiters[g_limiter_count++] = (RateLimiter){
             .port_start   = s,
             .port_end     = e,
             .tokens       = 0,
             .last_refill  = (uint64_t)now.QuadPart,
             .rate_per_tick = rate_per_tick,
-            .max_tokens   = DEFAULT_RATE_BPS * SCALE  // 1 second worth of tokens
+            .max_tokens   = rate_bps * SCALE  // 1 second worth of tokens
         };
     }
 }

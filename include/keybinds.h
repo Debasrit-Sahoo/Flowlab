@@ -18,6 +18,8 @@
 #define MAX_BUCKET_ENTRIES 16
 #define MAX_RULES 64
 
+#define MAX_LIMIT_LEVELS 14
+
 typedef struct{
     uint32_t vk;
     uint8_t mods;
