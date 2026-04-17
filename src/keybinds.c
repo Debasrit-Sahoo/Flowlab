@@ -1,7 +1,6 @@
 #include "keybinds.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 KeybindTable g_table;
 

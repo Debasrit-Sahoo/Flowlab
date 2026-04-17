@@ -1,6 +1,7 @@
 #include "config_loader.h"
 #include "parser.h"
 #include "keybinds.h"
+#include "divert.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -16,9 +17,26 @@ int config_load(const char *path, uint8_t* port_used){
     char line[256];
     int line_no = 0;
 
+    if (fgets(line, sizeof(line), fp)){
+        if (!strchr(line, '\n') && !strchr(line, '\r') && !feof(fp)){
+            fclose(fp);
+            return 0;
+        }
+        line[strcspn(line, "\r\n")] = '\0';
+        if (strncmp(line, "policy=", 7) == 0){
+            const char *val = line + 7;
+            if (strcmp(val, "remote") == 0)     port_policy_flag = 1;
+            else if (strcmp(val, "local") == 0) port_policy_flag = 0;
+            else { fclose(fp); return 0; }
+        } else {
+            // not a policy line, put it back for the rule loop
+            // (or just re-seek to start since we only consumed one line)
+            rewind(fp);
+        }
+    }
+
     while (fgets(line, sizeof(line), fp)){
         line_no++;
-        printf("read line %d: '%s'\n", line_no, line);
 
         if (!strchr(line, '\n') && !strchr(line, '\r')){
             if (!feof(fp)){

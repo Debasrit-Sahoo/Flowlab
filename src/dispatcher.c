@@ -2,6 +2,7 @@
 #include "statetable.h"
 #include <stdint.h>
 #include <stdio.h>
+#include "keybinds.h"
 
 void dispatch_keybind(Rule *r) {
     if (!r) return;
@@ -16,7 +17,9 @@ void dispatch_keybind(Rule *r) {
     for (uint16_t p = port_start; p <= port_end; p++) {
         g_state_table[p] = val;
     }
-    printf("rule=0x%02X ports=%u-%u %s\n",
-       r->rule, port_start, port_end,
-       r->active ? "ON" : "OFF");
+    printf("rule=0x%02X ports=%u-%u %s %s%s\n",
+        r->rule, port_start, port_end,
+        r->active ? "ON" : "OFF",
+        (r->rule & FLAG_UL) ? "UL" : "",
+        (r->rule & FLAG_DL) ? "DL" : "");
 }

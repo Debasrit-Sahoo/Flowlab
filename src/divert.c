@@ -4,8 +4,11 @@
 #include <stdint.h>
 #include "statetable.h"
 #include "keybinds.h"
+#include "limiter.h"
 
 #define MAXBUF 0xFFFF
+
+uint8_t port_policy_flag = 0;
 
 #pragma pack(push, 1)
 
@@ -136,7 +139,7 @@ int divert_init(void){
         return 1;
     }
 
-    printf("WinDivert opened, filter: %s\n", filter);
+    printf("WinDivert opened with filter\n");
     free(filter);
     HANDLE thread = CreateThread(NULL, 0, divert_thread, NULL, 0, NULL);
         if (!thread) {
@@ -150,10 +153,11 @@ int divert_init(void){
 
 void divert_loop(void){
     printf("LOOP THREAD SPAWNED SUCCESSFULLY\n");
+    printf("POLICY = %s\n", port_policy_flag ? "REMOTE" : "LOCAL");
     char packet[MAXBUF];
     WINDIVERT_ADDRESS addr;
     UINT packet_len;
-
+    limiters_init();
     while (1) {
         if (!WinDivertRecv(handle, packet, sizeof(packet), &packet_len, &addr)) {
             continue;
@@ -188,38 +192,45 @@ void divert_loop(void){
         if (proto != 6 && proto != 17) {
             goto forward;
         }
-
+        uint8_t outbound_interpretation = port_policy_flag ^ (uint8_t)addr.Outbound;
         //port
         if (packet_len < ip_len + 4) goto forward;
         L4Header *l4 = (L4Header*)(packet + ip_len);
         uint16_t src_port = ntohs(l4->src_port);
         uint16_t dst_port = ntohs(l4->dst_port);
-        uint16_t local_port = !addr.Outbound ? src_port : dst_port; // i do not understand why is the flag inverted but its the only way i got it to work
-        printf("%d\n",local_port);
-        uint8_t state = g_state_table[local_port];
+        uint16_t relevant_port = outbound_interpretation ? src_port : dst_port;
+        uint8_t state = g_state_table[relevant_port];
         
         if (!state){goto forward;}
 
         uint8_t proto_flag = (proto == 17) ? FLAG_UDP : FLAG_TCP;
-        uint8_t dir_flag   = !addr.Outbound ? FLAG_UL : FLAG_DL;
-
+        uint8_t dir_flag   = addr.Outbound ? FLAG_UL : FLAG_DL;
         uint8_t mask = proto_flag | dir_flag;
         if ((state & mask) != mask){goto forward;}
 
         uint8_t action = state >> ACTION_SHIFT;
         
         if (!action){goto forward;}
-        printf("proto=%u state=%x mask=%x action=%u\n",
-     proto, state, mask, action);
 
         switch (action){
             case 1:
                 continue;
 
-            case 2:
-                //call limit
-                continue;
-                break;
+            case 2: {
+                RateLimiter *l = NULL;
+                for (int i = 0; i < g_limiter_count; i++) {
+                    if (relevant_port >= g_limiters[i].port_start &&
+                        relevant_port <= g_limiters[i].port_end) {
+                        l = &g_limiters[i];
+                        break;
+                    }
+                }
+                if (l && !limiter_consume(l, packet_len)){
+                    continue;
+                }  // drop
+                printf("INJECTED BACK\n");
+                goto forward;
+            }
             
             default:
                 break;
