@@ -10,12 +10,12 @@
 
 //cl /std:c11 /W4 /O2 /permissive- /I include /I D:\divertengine\WinDivert\include /Fo:build\obj\ /Fe:build\app.exe src\main.c src\hook.c src\keybinds.c src\config_loader.c src\parser.c src\dispatcher.c src\statetable.c src\divert.c src\limiter.c user32.lib /link /LIBPATH:D:\divertengine\WinDivert\x64 WinDivert.lib ws2_32.lib
 
+static DWORD g_main_thread_id;
+
 static BOOL WINAPI console_handler(DWORD signal) {
     if (signal == CTRL_C_EVENT) {
-        hook_uninstall();
-        divert_close();
-        state_table_free();
-        ExitProcess(0);
+        PostThreadMessage(g_main_thread_id, WM_QUIT, 0, 0);
+        return TRUE;
     }
     return TRUE;
 }
@@ -36,6 +36,7 @@ int main(void){
     free(port_used);
     hook_install();
 
+    g_main_thread_id = GetCurrentThreadId();
     SetConsoleCtrlHandler(console_handler, TRUE);
 
     MSG msg;

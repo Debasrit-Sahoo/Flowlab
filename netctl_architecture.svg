@@ -1,0 +1,96 @@
+<svg width="100%" viewBox="0 0 680 580" xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <!-- Arrow -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </marker>
+
+    <!-- Styles -->
+    <style>
+      .box { rx:8; stroke-width:1; }
+      .label { font-family: system-ui, sans-serif; text-anchor:middle; }
+      .title { font-size:14px; font-weight:600; }
+      .sub { font-size:12px; opacity:0.8; }
+
+      .flow { stroke:#aaa; stroke-width:1.5; fill:none; marker-end:url(#arrow); }
+      .write { stroke:#f59e0b; stroke-dasharray:4 2; }
+      .read { stroke:#60a5fa; stroke-dasharray:2 4; }
+
+      .runtime { fill:none; stroke:#666; stroke-dasharray:6 4; }
+    </style>
+  </defs>
+
+  <!-- CONFIG -->
+  <rect class="box" x="240" y="20" width="200" height="52" fill="#444" stroke="#aaa"/>
+  <text class="label title" x="340" y="40" fill="#eee">config.txt</text>
+  <text class="label sub" x="340" y="58" fill="#ccc">policy, rules</text>
+
+  <line class="flow" x1="340" y1="72" x2="340" y2="102"/>
+
+  <!-- LOADER -->
+  <rect class="box" x="200" y="102" width="280" height="52" fill="#3c3489" stroke="#aaa"/>
+  <text class="label title" x="340" y="122" fill="#eee">config_loader</text>
+  <text class="label sub" x="340" y="140" fill="#ccc">parse rules</text>
+
+  <line class="flow" x1="340" y1="154" x2="340" y2="184"/>
+
+  <!-- KEYBINDS -->
+  <rect class="box" x="44" y="184" width="180" height="52" fill="#085041" stroke="#5dcaa5"/>
+  <text class="label title" x="134" y="204" fill="#d1fae5">keybinds</text>
+
+  <!-- STATETABLE -->
+  <rect class="box" x="250" y="184" width="180" height="52" fill="#085041" stroke="#5dcaa5"/>
+  <text class="label title" x="340" y="204" fill="#d1fae5">statetable</text>
+
+  <!-- DIVERT INIT -->
+  <rect class="box" x="456" y="184" width="180" height="52" fill="#085041" stroke="#5dcaa5"/>
+  <text class="label title" x="546" y="204" fill="#d1fae5">divert_init</text>
+
+  <!-- FAN OUT -->
+  <line class="flow" x1="340" y1="184" x2="134" y2="184"/>
+  <line class="flow" x1="340" y1="184" x2="546" y2="184"/>
+
+  <!-- RUNTIME BOX -->
+  <rect class="runtime" x="40" y="270" width="600" height="262" rx="14"/>
+  <text x="50" y="265" fill="#aaa" font-size="12">runtime</text>
+
+  <!-- DIVERT LOOP -->
+  <rect class="box" x="350" y="286" width="226" height="56" fill="#0c447c" stroke="#83b7eb"/>
+  <text class="label title" x="463" y="306" fill="#e0f2fe">divert_loop</text>
+
+  <!-- LIMITER -->
+  <rect class="box" x="350" y="374" width="226" height="52" fill="#633806" stroke="#f59e0b"/>
+  <text class="label title" x="463" y="394" fill="#fde68a">limiter</text>
+
+  <!-- WINDIVERT -->
+  <rect class="box" x="350" y="456" width="226" height="52" fill="#444" stroke="#aaa"/>
+  <text class="label title" x="463" y="476" fill="#eee">WinDivert</text>
+
+  <!-- HOOK -->
+  <rect class="box" x="54" y="380" width="180" height="52" fill="#712b13" stroke="#f0997b"/>
+  <text class="label title" x="144" y="400" fill="#fee2e2">hook</text>
+
+  <!-- DISPATCHER -->
+  <rect class="box" x="54" y="456" width="180" height="52" fill="#712b13" stroke="#f0997b"/>
+  <text class="label title" x="144" y="476" fill="#fee2e2">dispatcher</text>
+
+  <!-- FLOWS -->
+  <line class="flow" x1="546" y1="236" x2="546" y2="286"/>
+  <line class="flow" x1="463" y1="342" x2="463" y2="374"/>
+  <line class="flow" x1="463" y1="426" x2="463" y2="456"/>
+  <line class="flow" x1="134" y1="236" x2="134" y2="380"/>
+  <line class="flow" x1="144" y1="432" x2="144" y2="456"/>
+
+  <!-- WRITE: dispatcher -> statetable -->
+  <path class="flow write"
+        d="M234 482 C300 520, 300 300, 300 236"/>
+  <text x="280" y="505" fill="#f59e0b" font-size="12">write</text>
+
+  <!-- READ: statetable -> divert_loop -->
+  <path class="flow read"
+        d="M380 236 C420 250, 430 280, 380 310"/>
+  <text x="420" y="270" fill="#60a5fa" font-size="12">read</text>
+
+</svg>
