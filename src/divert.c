@@ -243,8 +243,6 @@ void divert_close(void) {
         handle = NULL;
     }
     if (g_thread){
-        printf("waiting for divert thread...\n");
-        DWORD result = WaitForSingleObject(g_thread, 3000);
         CloseHandle(g_thread);
         g_thread = NULL;
     }
