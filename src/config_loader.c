@@ -10,8 +10,9 @@
 extern KeybindDef g_defs[MAX_RULES];
 extern uint8_t g_def_count;
 
-static inline void err_and_close(FILE* fp, int line_no){
+static inline void err_and_close(FILE* fp, int line_no, char* s){
     fclose(fp);
+    printf("ERROR STR: '%s'\n", s);
     printf("Parse error at line %d.\n", line_no);
 }
 
@@ -29,7 +30,7 @@ int config_load(const char *path, uint8_t* port_used){
     while (fgets(line, sizeof(line), fp)) {
         line_no++;
         if (!strchr(line, '\n') && !strchr(line, '\r') && !feof(fp)) {
-            err_and_close(fp, line_no);
+            err_and_close(fp, line_no, line);
             return 0;
         }
         line[strcspn(line, "\r\n")] = '\0';
@@ -40,7 +41,7 @@ int config_load(const char *path, uint8_t* port_used){
             if (strcmp(val, "remote") == 0)     port_policy_flag = 1;
             else if (strcmp(val, "local") == 0) port_policy_flag = 0;
             else { 
-                err_and_close(fp, line_no);
+                err_and_close(fp, line_no, line);
                 return 0;
             }
             continue;
@@ -49,19 +50,19 @@ int config_load(const char *path, uint8_t* port_used){
         if (strncmp(line, "speed", 5) == 0) {
             char *eq = strchr(line + 5, '=');
             if (!eq) {
-                err_and_close(fp, line_no);
+                err_and_close(fp, line_no, line);
                 return 0;
             }
             *eq = '\0';
             char *end;
             long idx = strtol(line + 5, &end, 10);
             if (*end != '\0' || idx < 1 || idx > MAX_LIMIT_LEVELS) {
-                err_and_close(fp, line_no);
+                err_and_close(fp, line_no, line);
                 return 0;
             }
             uint64_t val = (uint64_t)strtoull(eq + 1, &end, 10);
             if (*end != '\0') {
-                err_and_close(fp, line_no);
+                err_and_close(fp, line_no, line);
                 return 0;
             }
             g_speeds[idx - 1] = val;
@@ -81,12 +82,12 @@ int config_load(const char *path, uint8_t* port_used){
         uint32_t range, vk;
 
         if (!parse_line(line, &vk, &mods, &range, &flags)){
-            err_and_close(fp, line_no);
+            err_and_close(fp, line_no, line);
             return 0;
         }
 
         if (g_table.rule_count >= MAX_RULES || g_def_count >= MAX_RULES){
-            err_and_close(fp, line_no);
+            err_and_close(fp, line_no, line);
             return 0;
         }
 

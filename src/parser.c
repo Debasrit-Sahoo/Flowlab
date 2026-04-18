@@ -99,7 +99,8 @@ int parse_direction(char *s, uint8_t *out) {
 }
 
 int parse_action(char *s, uint8_t *out) {
-    if (str_eq_icase(s, "BLOCK")) *out = 1;
+    s = trim(s);
+    if (str_eq_icase(s, "BLOCK")){*out = 1; return 1;}
     else if (strlen(s) >= 6 && str_eq_icase_n(s, "LIMIT", 5)) {
         char *num_part = s + 5;
         char *end;
