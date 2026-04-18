@@ -238,11 +238,13 @@ void divert_loop(void){
 void divert_close(void) {
     g_running = 0;
     if (handle) {
+        WinDivertShutdown(handle, WINDIVERT_SHUTDOWN_BOTH);
         WinDivertClose(handle);
         handle = NULL;
     }
     if (g_thread){
-        WaitForSingleObject(g_thread, 3000);
+        printf("waiting for divert thread...\n");
+        DWORD result = WaitForSingleObject(g_thread, 3000);
         CloseHandle(g_thread);
         g_thread = NULL;
     }
