@@ -68,8 +68,8 @@ static int build_rule_clause(const Rule *r, char *buf, int buf_size) {
             if (!(dir & dir_flags[di])) continue;
             snprintf(parts[part_count++], 128,
                 "%s.%sPort >= %u and %s.%sPort <= %u",
-                protos[pi], dirs[di], start,
-                protos[pi], dirs[di], end);
+                protos[pi], dirs[di^port_policy_flag], start,
+                protos[pi], dirs[di^port_policy_flag], end);
         }
     }
 
