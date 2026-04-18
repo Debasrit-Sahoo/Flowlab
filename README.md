@@ -147,8 +147,8 @@ The port range this rule applies to, inclusive. Both must be valid port numbers 
 For a single port: set both to the same value.
 
 ```
-3074, 3074       # single port
-27015, 27200     # range
+8000, 8000      # single port
+2015, 3015      # range
 ```
 
 #### Field 4 — PROTOCOL
@@ -191,18 +191,18 @@ speed1=8192
 speed2=65536
 speed3=1048576
 
-ALT+1, 3074, 3074, ALL,  DL,    LIMIT1
-ALT+2, 3074, 3074, ALL,  UL,    LIMIT2
-ALT+3, 7500, 7509, TCP,  ALL,   LIMIT3
-ALT+4, 30000, 30009, ALL, DL,   BLOCK
-ALT+5, 27015, 27200, ALL, UL,   LIMIT1
+ALT+1, 1400, 1400, ALL,  DL,    LIMIT1
+ALT+2, 2800, 2800, ALL,  UL,    LIMIT2
+ALT+3, 430, 450, TCP,  ALL,   LIMIT3
+ALT+4, 9000, 9090, ALL, DL,   BLOCK
+ALT+5, 5460, 8009, ALL, UL,   LIMIT1
 ```
 
-- `ALT+1` toggles download throttle on port 3074 at 8 KB/s
-- `ALT+2` toggles upload throttle on port 3074 at 64 KB/s
-- `ALT+3` toggles TCP throttle both directions on ports 7500–7509 at 1 MB/s
-- `ALT+4` toggles a hard download block on ports 30000–30009
-- `ALT+5` toggles upload throttle on ports 27015–27200 at 8 KB/s
+- `ALT+1` toggles download throttle on port 1400 at 8 KB/s
+- `ALT+2` toggles upload throttle on port 2800 at 64 KB/s
+- `ALT+3` toggles TCP throttle both directions on ports 430–450 at 1 MB/s
+- `ALT+4` toggles a hard download block on ports 9000–9090
+- `ALT+5` toggles upload throttle on ports 5460–8009 at 8 KB/s
 
 ---
 
