@@ -216,9 +216,9 @@ ALT+5, 5460, 8009, ALL, UL,   LIMIT1
 
 **Shared port conflict.** If two rules cover the same port, the state table entry for that port is a single byte. Toggling one rule overwrites the other's state. Avoid overlapping port ranges across rules.
 
-**IPv4 only.** IPv6 packets are forwarded without inspection.
+**IPv6 fragmented packets are forwarded without inspection.** Non-first IPv6 fragments (fragment extension header with a non-zero offset) are passed through unconditionally, as they do not carry port headers.
 
-**Fragmented packets are forwarded without inspection.** Only the first fragment carries the port headers; subsequent fragments are passed through unconditionally.
+**IPv4 fragmented packets are forwarded without inspection.** Only the first fragment carries port headers; subsequent fragments (non-zero fragment offset) are passed through unconditionally.
 
 **No runtime config reload.** Restart the process to apply config changes.
 
@@ -244,7 +244,7 @@ config_loader      — parses header directives and rule lines
             └─► divert_loop (thread)
                     │
                     ├── WinDivertRecv
-                    ├── IP/TCP/UDP parsing
+                    ├── IP/TCP/UDP parsing (IPv4 and IPv6)
                     ├── state table lookup
                     ├── action dispatch (forward / block / limit)
                     └── WinDivertSend

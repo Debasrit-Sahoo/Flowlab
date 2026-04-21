@@ -154,10 +154,64 @@ int divert_init(void){
     return 0;
 }
 
+static int ipv6_find_l4(uint8_t* pkt, UINT len, UINT* l4_offset, uint8_t* out_proto){
+    if (len < 40){return -1;}
+    uint8_t next = (uint8_t)pkt[6];
+    UINT offset = 40;
+
+    if (next == 17 || next ==6){
+        *l4_offset = offset;
+        *out_proto = next;
+        return 0;
+    }
+    int hops = 0;
+    while (1){
+        if (hops++ > 6){return -4;}
+        if ((next == 6 || next == 17)){
+            if (offset + 4 > len){return -1;}
+            *l4_offset = offset;
+            *out_proto = next;
+            return 0;
+        }
+        if (next == 59){return -1;}
+        
+        uint8_t hdr_len = 0;
+        switch (next){
+            case 44:
+                if (offset + 8 > len){return -1;}
+
+                if (((pkt[offset + 2] << 8) | pkt[offset+3]) >> 3){return -2;}
+
+                next = pkt[offset];
+                offset += 8;
+                continue;
+
+            case 51:
+                if (offset + 2 > len){return -1;}
+                hdr_len = (pkt[offset+1] + 2)*4;
+                break;
+
+            case 0:
+            case 43:
+            case 60:
+                if (offset + 2 > len){return -1;}
+                hdr_len = (pkt[offset+1] + 1)*8;
+                break;
+
+            default:
+                return -3;
+        }
+    if (offset + hdr_len > len || (hdr_len < 8)){return -1;}
+
+    next = pkt[offset];
+    offset += hdr_len;
+    }
+}
+
 void divert_loop(void){
     printf("LOOP THREAD SPAWNED SUCCESSFULLY\n");
     printf("POLICY = %s\n", port_policy_flag ? "REMOTE" : "LOCAL");
-    char packet[MAXBUF];
+    uint8_t packet[MAXBUF];
     WINDIVERT_ADDRESS addr;
     UINT packet_len;
     limiters_init();
@@ -168,39 +222,62 @@ void divert_loop(void){
         //Detect IP version
         if (packet_len == 0) continue;
         uint8_t version = packet[0] >> 4;
-
         UINT ip_len;
         uint8_t proto;
 
         //Minimal IP parsing
         if (version == 4) {
             if (packet_len < 20) goto forward;
-            IPv4Header *ip = (IPv4Header*)packet;
-            uint16_t frag = ntohs(ip->flags_frag);
-            if (frag & 0x1FFF) goto forward;
-            ip_len = (ip->ver_ihl & 0x0F) * 4;
-            if (ip_len < 20 || ip_len > packet_len) goto forward;
-            proto  = ip->proto;
-        } else {
-            //skipping ipv6 support for now
-            goto forward;
-        /*
-            IPv6Header *ip6 = (IPv6Header*)packet;
-            ip_len = 40;
-            proto  = ip6->next_hdr;
-        */
-        }
 
+            uint8_t ihl = packet[0] & 0x0F;
+            if (ihl < 5) goto forward;
+
+            ip_len = ihl * 4;
+            if (packet_len < ip_len) goto forward;
+
+            uint16_t frag = (packet[6] << 8) | packet[7];
+
+            uint16_t frag_offset = frag & 0x1FFF;
+
+            if (frag_offset != 0){goto forward;}
+
+            proto = packet[9];
+        } 
+        else if (version == 6){
+
+            UINT l4_offset;
+            if (ipv6_find_l4((uint8_t*)packet, packet_len, &l4_offset, &proto) != 0){
+                goto forward;
+            }
+
+            if (l4_offset < 40 || l4_offset > packet_len){goto forward;}
+            ip_len = l4_offset;
+        }
+        else{
+            goto forward;
+        }
         //TCP/UDP
         if (proto != 6 && proto != 17) {
             goto forward;
         }
+        if (proto == 6) { // TCP
+            if (packet_len < ip_len + 20){goto forward;}
+            
+            uint8_t tcp_hlen = ((packet[ip_len + 12] >> 4) & 0xF) * 4;
+            if (tcp_hlen < 20){goto forward;}
+            if (packet_len < ip_len + tcp_hlen){goto forward;};
+        }
+        else{ // UDP
+            if (packet_len < ip_len + 8){goto forward;}
+        }
+
         uint8_t outbound_interpretation = port_policy_flag ^ (uint8_t)addr.Outbound;
-        //port
-        if (packet_len < ip_len + 4) goto forward;
-        L4Header *l4 = (L4Header*)(packet + ip_len);
-        uint16_t src_port = ntohs(l4->src_port);
-        uint16_t dst_port = ntohs(l4->dst_port);
+        uint16_t src_port =
+            ((uint16_t)packet[ip_len] << 8) |
+            (uint16_t)packet[ip_len + 1];
+        uint16_t dst_port =
+            ((uint16_t)packet[ip_len + 2] << 8) |
+            (uint16_t)packet[ip_len + 3];
         uint16_t relevant_port = outbound_interpretation ? src_port : dst_port;
         uint8_t state = g_state_table[relevant_port];
         
@@ -209,6 +286,7 @@ void divert_loop(void){
         uint8_t proto_flag = (proto == 17) ? FLAG_UDP : FLAG_TCP;
         uint8_t dir_flag   = addr.Outbound ? FLAG_UL : FLAG_DL;
         uint8_t mask = proto_flag | dir_flag;
+        
         if ((state & mask) != mask){goto forward;}
 
         uint8_t action = state >> ACTION_SHIFT;
