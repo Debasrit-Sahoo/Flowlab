@@ -93,23 +93,14 @@ Keybinds toggle rules by flipping a single byte in a shared state table, allowin
 ```bat
 
 cl /std:c11 /W4 /O2 /permissive- ^
-
     /I include ^
-
     /I D:\\WinDivert\\include ^
-
     /Fo:build\\obj\\ ^
-
     /Fe:build\\app.exe ^
-
     src\\main.c src\\hook.c src\\keybinds.c src\\config\_loader.c ^
-
     src\\parser.c src\\dispatcher.c src\\statetable.c src\\divert.c src\\limiter.c ^
-
     user32.lib ^
-
     /link /LIBPATH:D:\\WinDivert\\x64 WinDivert.lib ws2\_32.lib
-
 ```
 
 3. Copy `WinDivert.dll` and `WinDivert.sys` into the output directory.
