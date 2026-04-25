@@ -375,6 +375,15 @@ Flowlab is built for **fast, targeted, reversible control**.
 
 ---
 
+## Antivirus Warning
+
+Flowlab uses WinDivert to intercept network packets at the kernel level.
+Because of this, some antivirus software (including Windows Defender) may flag it as suspicious.
+
+This is a false positive due to the nature of packet interception tools.
+
+---
+
 ## License
 
 Uses [WinDivert](https://reqrypt.org/windivert.html) (LGPL v3).
