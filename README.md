@@ -1,30 +1,16 @@
 # Flowlab
 
-
-
 > Instant, per-port network control for Windows
-
-
 
 Bind keyboard shortcuts to rules that block or rate-limit traffic on specific ports, and toggle them instantly at runtime. No GUI, no background services, no system-wide configuration changes.
 
-
-
 Built on [WinDivert](https://reqrypt.org/windivert.html).
-
-
 
 ---
 
-
-
 ## Why This Exists
 
-
-
 Modern tools for controlling network traffic are either:
-
-
 
 - **Too heavy** — full GUI apps running constantly
 
@@ -32,19 +18,11 @@ Modern tools for controlling network traffic are either:
 
 - **Too coarse** — system-wide throttling with no precision
 
-
-
 Flowlab is designed for fast, targeted control. You define rules once, then toggle them on and off with a keypress. That's it.
-
-
 
 ---
 
-
-
 ## Use Cases
-
-
 
 - Simulate poor network conditions for testing
 
@@ -56,15 +34,9 @@ Flowlab is designed for fast, targeted control. You define rules once, then togg
 
 - Reproduce edge cases like packet drops or slow links
 
-
-
 ---
 
-
-
 ## Features
-
-
 
 - Packet interception using WinDivert (kernel-level)
 
@@ -82,39 +54,25 @@ Flowlab is designed for fast, targeted control. You define rules once, then togg
 
 - No GUI, no background service
 
-
-
 ---
-
-
 
 ## How It Works
 
+1. A config file defines rules (port range, protocol, direction, action)
 
+2. Each rule is mapped to a keyboard shortcut
 
-1\. A config file defines rules (port range, protocol, direction, action)
+3. A background thread intercepts packets using WinDivert
 
-2\. Each rule is mapped to a keyboard shortcut
+4. A cache-friendly global state table (1 byte per port)
 
-3\. A background thread intercepts packets using WinDivert
-
-4\. A cache-friendly global state table (1 byte per port)
-
-5\. Matching packets are either forwarded, dropped, or rate-limited
-
-
+5. Matching packets are either forwarded, dropped, or rate-limited
 
 Keybinds toggle rules by flipping a single byte in a shared state table, allowing lock-free interaction between threads.
 
-
-
 ---
 
-
-
 ## Requirements
-
-
 
 - Windows 10 or later (x64)
 
@@ -124,73 +82,51 @@ Keybinds toggle rules by flipping a single byte in a shared state table, allowin
 
 - Administrator privileges (required by WinDivert)
 
-
-
 ---
-
-
 
 ## Build
 
+1. Download and extract WinDivert (e.g. `D:\\WinDivert\\`)
 
-
-1\. Download and extract WinDivert (e.g. `D:\\WinDivert\\`)
-
-
-
-2\. From a **Visual Studio Developer Command Prompt**:
-
-
+2. From a **Visual Studio Developer Command Prompt**:
 
 ```bat
 
 cl /std:c11 /W4 /O2 /permissive- ^
 
-&#x20;  /I include ^
+    /I include ^
 
-&#x20;  /I D:\\WinDivert\\include ^
+    /I D:\\WinDivert\\include ^
 
-&#x20;  /Fo:build\\obj\\ ^
+    /Fo:build\\obj\\ ^
 
-&#x20;  /Fe:build\\app.exe ^
+    /Fe:build\\app.exe ^
 
-&#x20;  src\\main.c src\\hook.c src\\keybinds.c src\\config\_loader.c ^
+    src\\main.c src\\hook.c src\\keybinds.c src\\config\_loader.c ^
 
-&#x20;  src\\parser.c src\\dispatcher.c src\\statetable.c src\\divert.c src\\limiter.c ^
+    src\\parser.c src\\dispatcher.c src\\statetable.c src\\divert.c src\\limiter.c ^
 
-&#x20;  user32.lib ^
+    user32.lib ^
 
-&#x20;  /link /LIBPATH:D:\\WinDivert\\x64 WinDivert.lib ws2\_32.lib
+    /link /LIBPATH:D:\\WinDivert\\x64 WinDivert.lib ws2\_32.lib
 
 ```
 
-
-
-3\. Copy `WinDivert.dll` and `WinDivert.sys` into the output directory.
-
-
+3. Copy `WinDivert.dll` and `WinDivert.sys` into the output directory.
 
 ---
 
-
-
 ## Installation
 
+1. Grab a build of `app.exe` (or build it yourself — see [Build](#build))
 
+2. Download [WinDivert 2.x](https://reqrypt.org/windivert.html) and extract it
 
-1\. Grab a build of `app.exe` (or build it yourself — see [Build](#build))
+3. Copy `WinDivert.dll` and `WinDivert.sys` into the same folder as `app.exe`
 
-2\. Download [WinDivert 2.x](https://reqrypt.org/windivert.html) and extract it
-
-3\. Copy `WinDivert.dll` and `WinDivert.sys` into the same folder as `app.exe`
-
-4\. Place your `config.txt` in that same folder
-
-
+4. Place your `config.txt` in that same folder
 
 Your directory should look like this:
-
-
 
 ```
 
@@ -206,27 +142,15 @@ flowlab/
 
 ```
 
-
-
 ---
-
-
 
 ## Run
 
-
-
 Flowlab uses WinDivert to intercept packets at the kernel level, which **requires Administrator privileges**. It will not function without elevation.
-
-
 
 **Option 1 — Right-click → Run as administrator** on `app.exe`
 
-
-
 **Option 2 — From an elevated command prompt:**
-
-
 
 ```bat
 
@@ -234,11 +158,7 @@ app.exe
 
 ```
 
-
-
 > **Tip:** To always run elevated, right-click `app.exe` → Properties → Compatibility → check *Run this program as an administrator*.
-
-
 
 - Reads `config.txt` from the working directory
 
@@ -246,59 +166,31 @@ app.exe
 
 - Press `Ctrl+C` to shut down cleanly
 
-
-
 ---
-
-
 
 ## Troubleshooting
 
-
-
 ### `Access is denied` or `ERROR\_ACCESS\_DENIED`
-
-
 
 Flowlab was not launched with Administrator privileges. Right-click `app.exe` and select **Run as administrator**, or launch it from an elevated command prompt.
 
-
-
 ---
-
-
 
 ### `The system cannot find the file specified` / `WinDivert.dll not found`
 
-
-
 `WinDivert.dll` and `WinDivert.sys` are missing from the application directory. Copy both files from your WinDivert 2.x download into the same folder as `app.exe`.
 
-
-
 ---
-
-
 
 ### `This version of WinDivert requires...` / driver version mismatch
 
-
-
 You have a mismatched WinDivert version. Make sure `WinDivert.dll` and `WinDivert.sys` are both from the **same WinDivert 2.x release** — do not mix files from different versions.
-
-
 
 ---
 
-
-
 ### `The driver is blocked from loading` / `Code integrity` error
 
-
-
 Windows is blocking the WinDivert kernel driver due to driver signature enforcement. Try:
-
-
 
 - Ensure you're using an **official WinDivert release** (signed driver)
 
@@ -306,15 +198,9 @@ Windows is blocking the WinDivert kernel driver due to driver signature enforcem
 
 - On Windows 11: some builds may require test signing mode — see WinDivert's documentation
 
-
-
 ---
 
-
-
 ### Packets are not being intercepted / rules have no effect
-
-
 
 - Confirm Flowlab is running as Administrator
 
@@ -324,35 +210,19 @@ Windows is blocking the WinDivert kernel driver due to driver signature enforcem
 
 - Make sure the target application traffic actually uses the port range specified in your rule
 
-
-
 ---
-
-
 
 ### Config error on startup
 
-
-
 Flowlab prints the offending line number and exits. Open `config.txt`, go to the reported line, and check for typos in the keybind, port range, protocol, direction, or action fields.
-
-
 
 ---
 
-
-
 ## Configuration
-
-
 
 All behavior is defined in a single file: `config.txt`
 
-
-
 ### Structure
-
-
 
 ```
 
@@ -362,19 +232,11 @@ All behavior is defined in a single file: `config.txt`
 
 ```
 
-
-
 ---
-
-
 
 ### Header Options
 
-
-
 #### Policy
-
-
 
 ```ini
 
@@ -384,8 +246,6 @@ policy=local
 
 ```
 
-
-
 | Value    | Behavior                                      |
 
 |----------|-----------------------------------------------|
@@ -394,15 +254,9 @@ policy=local
 
 | `local`  | Match on your machine's port                  |
 
-
-
 **Default:** `remote`
 
-
-
 #### Rate Limits
-
-
 
 ```ini
 
@@ -414,23 +268,15 @@ speed2=65536
 
 ```
 
-
-
 - Values are in **bytes per second**
 
 - Used by `LIMIT1` through `LIMIT14`
 
 - Unspecified levels default to **1 byte/sec** (effectively blocked)
 
-
-
 ---
 
-
-
 ### Rule Format
-
-
 
 ```
 
@@ -438,11 +284,7 @@ KEYBIND, PORT\_START, PORT\_END, PROTOCOL, DIRECTION, ACTION
 
 ```
 
-
-
 **Example:**
-
-
 
 ```
 
@@ -450,11 +292,7 @@ ALT+1, 1400, 1400, ALL, DL, LIMIT1
 
 ```
 
-
-
 #### Fields
-
-
 
 | Field       | Options / Format                                         |
 
@@ -470,19 +308,11 @@ ALT+1, 1400, 1400, ALL, DL, LIMIT1
 
 | **Action**  | `BLOCK` or `LIMIT1` … `LIMIT14`                         |
 
-
-
 Rate limiting uses a **token bucket**. Excess packets are dropped.
-
-
 
 ---
 
-
-
 ### Example Config
-
-
 
 ```ini
 
@@ -494,8 +324,6 @@ speed2=65536
 
 speed3=1048576
 
-
-
 ALT+1, 1400, 1400, ALL, DL, LIMIT1
 
 ALT+2, 2800, 2800, ALL, UL, LIMIT2
@@ -506,15 +334,9 @@ ALT+4, 9000, 9090, ALL, DL, BLOCK
 
 ```
 
-
-
 ---
 
-
-
 ## Design Notes
-
-
 
 - **State table:** `uint8\_t g\_state\_table[65536]` — 1 byte per port
 
@@ -524,15 +346,9 @@ ALT+4, 9000, 9090, ALL, DL, BLOCK
 
 - Packet parsing supports IPv4 and IPv6
 
-
-
 ---
 
-
-
 ## Limitations
-
-
 
 - Max **64 rules** (compile-time constant)
 
@@ -550,15 +366,9 @@ ALT+4, 9000, 9090, ALL, DL, BLOCK
 
 - Requires administrator privileges
 
-
-
 ---
 
-
-
 ## Why Not Just Use a Firewall or NetLimiter?
-
-
 
 | Tool | Problem |
 
@@ -570,19 +380,10 @@ ALT+4, 9000, 9090, ALL, DL, BLOCK
 
 | System-wide throttling | Lacks per-port precision |
 
-
-
 Flowlab is built for **fast, targeted, reversible control**.
-
-
 
 ---
 
-
-
 ## License
 
-
-
 Uses [WinDivert](https://reqrypt.org/windivert.html) (LGPL v3).
-
