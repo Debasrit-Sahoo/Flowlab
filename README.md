@@ -86,7 +86,7 @@ Keybinds toggle rules by flipping a single byte in a shared state table, allowin
 
 ## Build
 
-1. Download and extract WinDivert (e.g. `D:\\WinDivert\\`)
+1. Download and extract WinDivert (e.g. `D:\WinDivert\`)
 
 2. From a **Visual Studio Developer Command Prompt**:
 
@@ -94,13 +94,13 @@ Keybinds toggle rules by flipping a single byte in a shared state table, allowin
 
 cl /std:c11 /W4 /O2 /permissive- ^
     /I include ^
-    /I D:\\WinDivert\\include ^
-    /Fo:build\\obj\\ ^
-    /Fe:build\\app.exe ^
-    src\\main.c src\\hook.c src\\keybinds.c src\\config\_loader.c ^
-    src\\parser.c src\\dispatcher.c src\\statetable.c src\\divert.c src\\limiter.c ^
+    /I D:\WinDivert\include ^
+    /Fo:build\obj\ ^
+    /Fe:build\app.exe ^
+    src\main.c src\hook.c src\keybinds.c src\config_loader.c ^
+    src\parser.c src\dispatcher.c src\statetable.c src\divert.c src\limiter.c ^
     user32.lib ^
-    /link /LIBPATH:D:\\WinDivert\\x64 WinDivert.lib ws2\_32.lib
+    /link /LIBPATH:D:\WinDivert\x64 WinDivert.lib ws2_32.lib
 ```
 
 3. Copy `WinDivert.dll` and `WinDivert.sys` into the output directory.
@@ -161,7 +161,7 @@ app.exe
 
 ## Troubleshooting
 
-### `Access is denied` or `ERROR\_ACCESS\_DENIED`
+### `Access is denied` or `ERROR_ACCESS_DENIED`
 
 Flowlab was not launched with Administrator privileges. Right-click `app.exe` and select **Run as administrator**, or launch it from an elevated command prompt.
 
@@ -271,7 +271,7 @@ speed2=65536
 
 ```
 
-KEYBIND, PORT\_START, PORT\_END, PROTOCOL, DIRECTION, ACTION
+KEYBIND, PORT_START, PORT_END, PROTOCOL, DIRECTION, ACTION
 
 ```
 
@@ -329,7 +329,7 @@ ALT+4, 9000, 9090, ALL, DL, BLOCK
 
 ## Design Notes
 
-- **State table:** `uint8\_t g\_state\_table[65536]` — 1 byte per port
+- **State table:** `uint8_t g_state_table[65536]` — 1 byte per port
 
 - Lock-free access between threads (atomic on x86-64)
 
